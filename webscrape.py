@@ -292,3 +292,5 @@ for game in two_star_games:
 print("\n3 Star Games:")
 for game in three_star_games:
     print(f"{game['Warning']} {game['Game Time']}: {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
+
+input("\n\nPress enter to close program")

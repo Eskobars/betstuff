@@ -1,13 +1,38 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.firefox.options import Options
 import time
 import random
 from datetime import datetime
 import pandas as pd
+import requests
+
+# Import the custom module for API interactions
+from football_api import get_injury_data
+
+# Specify the team ID and season
+team_id = 33  # Example: Manchester United
+season = 2023
+
+# Fetch the injury data
+injury_data = get_injury_data(team_id, season)
+
+# Process and display the injury data
+if injury_data:
+    for injury in injury_data['response']:
+        player = injury['player']['name']
+        type_of_injury = injury['injury']['type']
+        description = injury['injury']['description']
+        date = injury['fixture']['date']
+        print(f'Player: {player}, Injury: {type_of_injury}, Description: {description}, Date: {date}')
 
 # Initialize the browser
-driver = webdriver.Firefox()
+
+options = webdriver.FirefoxOptions()
+options.add_argument("--headless")
+
+driver = webdriver.Firefox(options=options)
 driver.get('https://nr.soccerway.com/')
 time.sleep(random.uniform(0.5, 1.0))  # Random sleep between 0.5 and 1.0 seconds
 

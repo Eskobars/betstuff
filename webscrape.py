@@ -7,6 +7,8 @@ import time
 import random
 from datetime import datetime
 import pandas as pd
+from fixtures import fetch_fixtures_for_day, get_fixtures_for_team
+import json
 
 def setup_driver():
     options = webdriver.FirefoxOptions()
@@ -32,8 +34,7 @@ def main():
         except TimeoutException:
             print("Timeout while trying to find the cookie rejection button.")
         
-        leagues = ['Kolmonen', 'Kakkonen', 'Liga Profesional Argentina']
-        season = 2024
+        leagues = ['Ykkönen', 'Kolmonen', 'Kakkonen', 'Liga Profesional Argentina', 'Serie B', 'Serie A']
         current_date = pd.Timestamp.now()
         epoch_time = datetime(1970, 1, 1)
         delta_seconds = int((current_date - epoch_time).total_seconds())
@@ -44,6 +45,16 @@ def main():
         one_star_games = []
         two_star_games = []
         three_star_games = []
+
+        try: 
+            all_fixtures_data = fetch_fixtures_for_day()
+            # with open('fixtures_data.json', 'w') as f:
+            #     json.dump(all_fixtures_data, f, indent=4)
+            # print("Data written to fixtures_data.json")
+            print("Fixtures fetched succesfully")
+
+        except TimeoutException:
+            print("Football.API timed out")
 
         for league in leagues:
             try:
@@ -167,6 +178,12 @@ def main():
                             additional_points_home = 1
                             additional_points_away = -1
 
+                            home_team_fixture = get_fixtures_for_team(all_fixtures_data, home_team_name_fragment)
+                            print(home_team_fixture)
+
+                            away_team_fixture = get_fixtures_for_team(all_fixtures_data, away_team_name_fragment)
+                            print(away_team_fixture)
+
                             total_points_home = placement_points_home + home_goal_points + home_recent_performance_points + additional_points_home
                             total_points_away = placement_points_away + away_goal_points + away_recent_performance_points + additional_points_away
 
@@ -225,15 +242,15 @@ def main():
 
     print("1 Star Games:")
     for game in one_star_games:
-        print(f"{game['Warning']} {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
+        print(f"{game['Warning']} - {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
 
     print("\n2 Star Games:")
     for game in two_star_games:
-        print(f"{game['Warning']} {game['Game Time']}: {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
+        print(f"{game['Warning']} - League: {league['League']}, {game['Game Time']}: {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
 
     print("\n3 Star Games:")
     for game in three_star_games:
-        print(f"{game['Warning']} {game['Game Time']}: {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
+        print(f"{game['Warning']} - League: {league['League']}, {game['Game Time']}: {game['Home Team']} vs {game['Away Team']}, Predicted Winner: {game['Predicted Winner']}, Points Home: {game['Points Home']}, Points Away: {game['Points Away']}")
 
     print("Press anything to quit")
     input()

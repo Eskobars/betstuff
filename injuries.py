@@ -1,20 +1,41 @@
-import requests
-from config import API_KEY  # Import the API key
+import http.client
+import json
+from config import API_KEY
 
-# Function to fetch injury data from API-Football
-def get_injury_data(team_id, season):
-    BASE_URL = 'https://v3.football.api-sports.io/'
-    
+def fetch_players_for_fixture(fixture_id):
+    conn = http.client.HTTPSConnection("v3.football.api-sports.io")
+
     headers = {
-        'x-apisports-key': API_KEY
+        'x-rapidapi-host': "v3.football.api-sports.io",
+        'x-rapidapi-key': API_KEY
     }
+
+    url = f"/fixtures/players?fixture={fixture_id}"
+    conn.request("GET", url, headers=headers)
+    res = conn.getresponse()
+    data = res.read()
     
-    url = f'{BASE_URL}injuries?team={team_id}&season={season}'
+    # Decode the JSON data
+    parsed_data = json.loads(data.decode("utf-8"))
     
-    response = requests.get(url, headers=headers)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f'Error: {response.status_code}, {response.text}')
-        return None
+    return parsed_data
+
+def get_key_players(player_data, rating_threshold=7.0):
+    key_players = []
+
+    # Traverse the response structure to access player statistics
+    for team in player_data.get('response', []):
+        for player in team.get('players', []):
+            player_id = player['player']['id']
+            player_name = player['player']['name']
+            # Assuming rating is the first element in statistics list
+            player_rating = float(player['statistics'][0]['games']['rating']) if 'rating' in player['statistics'][0]['games'] else 0.0
+            
+            if player_rating >= rating_threshold:
+                key_players.append({
+                    'id': player_id,
+                    'name': player_name,
+                    'rating': player_rating
+                })
+
+    return key_players

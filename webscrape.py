@@ -7,7 +7,8 @@ import time
 import random
 from datetime import datetime
 import pandas as pd
-from fixtures import fetch_fixtures_for_day, get_fixtures_for_team
+from fixtures import fetch_fixtures_for_day, get_fixture_id
+from players import fetch_players_for_fixture, get_players_by_team
 import json
 
 def setup_driver():
@@ -15,6 +16,19 @@ def setup_driver():
     # options.add_argument("--headless")  # Uncomment for headless mode
     driver = webdriver.Firefox(options=options)
     return driver
+
+##def get_current_day_epoch_range():
+    # Get the start and end of the current day
+    now = pd.Timestamp.now()
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)    
+    end_of_day = start_of_day + timedelta(days=1)  # End of the day is start of next day
+
+    # Convert to epoch time
+    epoch_time = datetime(1970, 1, 1)
+    start_epoch = int((start_of_day - epoch_time).total_seconds())
+    end_epoch = int((end_of_day - epoch_time).total_seconds())
+
+    return start_epoch, end_epoch
 
 def main():
     driver = setup_driver()
@@ -47,10 +61,9 @@ def main():
         three_star_games = []
 
         try: 
-            all_fixtures_data = fetch_fixtures_for_day()
-            # with open('fixtures_data.json', 'w') as f:
-            #     json.dump(all_fixtures_data, f, indent=4)
-            # print("Data written to fixtures_data.json")
+            all_fixtures_data = fetch_fixtures_for_day() 
+            with open('fixtures_data.json', 'w') as f:
+                 json.dump(all_fixtures_data, f, indent=4)
             print("Fixtures fetched succesfully")
 
         except TimeoutException:
@@ -178,11 +191,8 @@ def main():
                             additional_points_home = 1
                             additional_points_away = -1
 
-                            home_team_fixture = get_fixtures_for_team(all_fixtures_data, home_team_name_fragment)
-                            print(home_team_fixture)
-
-                            away_team_fixture = get_fixtures_for_team(all_fixtures_data, away_team_name_fragment)
-                            print(away_team_fixture)
+                            fixture_id_home = get_fixture_id(all_fixtures_data, home_team_name_fragment)
+                            fixture_id_away = get_fixture_id(all_fixtures_data, away_team_name_fragment)
 
                             total_points_home = placement_points_home + home_goal_points + home_recent_performance_points + additional_points_home
                             total_points_away = placement_points_away + away_goal_points + away_recent_performance_points + additional_points_away
@@ -223,6 +233,23 @@ def main():
                                     two_star_games.append(game_info)
                                 elif bet_rank == 3:
                                     three_star_games.append(game_info)
+
+                                if (fixture_id_home == fixture_id_away) and bet_rank > 1:
+                                    player_data = fetch_players_for_fixture(fixture_id_home)
+
+                                    if player_data:
+                                        # Get key players for both home and away teams
+                                        home_players, away_players = get_players_by_team(player_data, rating_threshold=7.0)
+                                        
+                                        print("Home Team Players:")
+                                        for player in home_players:
+                                            print(f"ID: {player['id']}, Name: {player['name']}, Rating: {player['rating']}")
+
+                                        print("\nAway Team Players:")
+                                        for player in away_players:
+                                            print(f"ID: {player['id']}, Name: {player['name']}, Rating: {player['rating']}")
+                                    else:
+                                        print("No player data available.")
 
                             print(f"Predicted Winner: {winner}")
 

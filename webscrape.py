@@ -5,11 +5,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from fixtures import fetch_fixtures_for_day, get_fixture_id
 from players import fetch_players_for_fixture, get_players_by_team
 import json
+import config
 
 def setup_driver():
     options = webdriver.FirefoxOptions()
@@ -17,13 +18,11 @@ def setup_driver():
     driver = webdriver.Firefox(options=options)
     return driver
 
-##def get_current_day_epoch_range():
-    # Get the start and end of the current day
+def get_current_day_epoch_range():
     now = pd.Timestamp.now()
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)    
     end_of_day = start_of_day + timedelta(days=1)  # End of the day is start of next day
 
-    # Convert to epoch time
     epoch_time = datetime(1970, 1, 1)
     start_epoch = int((start_of_day - epoch_time).total_seconds())
     end_epoch = int((end_of_day - epoch_time).total_seconds())
@@ -34,7 +33,7 @@ def main():
     driver = setup_driver()
     try:
         print("Loading the page...")
-        driver.get('https://nr.soccerway.com/')
+        driver.get(config.URL)
         
         wait = WebDriverWait(driver, 10)
         
@@ -49,12 +48,8 @@ def main():
             print("Timeout while trying to find the cookie rejection button.")
         
         leagues = ['Ykkönen', 'Kolmonen', 'Kakkonen', 'Liga Profesional Argentina', 'Serie B', 'Serie A']
-        current_date = pd.Timestamp.now()
-        epoch_time = datetime(1970, 1, 1)
-        delta_seconds = int((current_date - epoch_time).total_seconds())
-        one_day_epoch = 86400
-        min_time = delta_seconds - one_day_epoch
-        max_time = delta_seconds + one_day_epoch
+
+        date = get_current_day_epoch_range
 
         one_star_games = []
         two_star_games = []

@@ -1,6 +1,8 @@
 # Betstuff
 
-Betstuff is a webscraper made with python that provides automated calculations for upcoming soccer games.
+Betstuff is a webscraper made with Selenium using Python for ranking upcoming soccer games. 
+
+Made as a training project.
 
 # Installation
 
